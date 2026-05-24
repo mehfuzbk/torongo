@@ -1,6 +1,6 @@
-# Torongo — Master Theme Specification
+﻿# Torongo — Master Theme Specification
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Date:** 2026-05-24  
 **Author:** Architecture Design Phase  
 **Status:** Approved — Source of Truth  
@@ -23,27 +23,28 @@
 5. [Folder Structure](#5-folder-structure)
 6. [File Structure and Purpose](#6-file-structure-and-purpose)
 7. [Design System Decisions](#7-design-system-decisions)
-8. [Header Builder Architecture](#8-header-builder-architecture)
-9. [Footer Builder Architecture](#9-footer-builder-architecture)
-10. [Homepage System Architecture](#10-homepage-system-architecture)
-11. [Customization Architecture](#11-customization-architecture)
-12. [WooCommerce Integration Architecture](#12-woocommerce-integration-architecture)
-13. [Responsive Architecture](#13-responsive-architecture)
-14. [SEO Architecture](#14-seo-architecture)
-15. [Accessibility Architecture](#15-accessibility-architecture)
-16. [Database Usage](#16-database-usage)
-17. [Performance Strategy](#17-performance-strategy)
-18. [Security Strategy](#18-security-strategy)
-19. [Hooks and Filters Plan](#19-hooks-and-filters-plan)
-20. [Internationalization and Translation](#20-internationalization-and-translation)
-21. [Dependencies and Libraries](#21-dependencies-and-libraries)
-22. [Naming Conventions](#22-naming-conventions)
-23. [Coding Standards](#23-coding-standards)
-24. [Child Theme Compatibility](#24-child-theme-compatibility)
-25. [Development Roadmap](#25-development-roadmap)
-26. [Architecture Review Findings](#26-architecture-review-findings)
-27. [Assumptions and Open Decisions](#27-assumptions-and-open-decisions)
-28. [Change Log](#28-change-log)
+8. [Design Tokens — Global Design System](#8-design-tokens--global-design-system)
+9. [Header Builder Architecture](#9-header-builder-architecture)
+10. [Footer Builder Architecture](#10-footer-builder-architecture)
+11. [Homepage System Architecture](#11-homepage-system-architecture)
+12. [Customization Architecture](#12-customization-architecture)
+13. [WooCommerce Integration Architecture](#13-woocommerce-integration-architecture)
+14. [Responsive Architecture](#14-responsive-architecture)
+15. [SEO Architecture](#15-seo-architecture)
+16. [Accessibility Architecture](#16-accessibility-architecture)
+17. [Database Usage](#17-database-usage)
+18. [Performance Strategy](#18-performance-strategy)
+19. [Security Strategy](#19-security-strategy)
+20. [Hooks and Filters Plan](#20-hooks-and-filters-plan)
+21. [Internationalization and Translation](#21-internationalization-and-translation)
+22. [Dependencies and Libraries](#22-dependencies-and-libraries)
+23. [Naming Conventions](#23-naming-conventions)
+24. [Coding Standards](#24-coding-standards)
+25. [Child Theme Compatibility](#25-child-theme-compatibility)
+26. [Development Roadmap](#26-development-roadmap)
+27. [Architecture Review Findings](#27-architecture-review-findings)
+28. [Assumptions and Open Decisions](#28-assumptions-and-open-decisions)
+29. [Change Log](#29-change-log)
 
 ---
 
@@ -628,11 +629,368 @@ Default border color: `var(--wp--preset--color--border)`
 | `wideSize` | 1200px (standard layout max-width) |
 | Outer padding | `var(--wp--preset--spacing--50)` (24px) on mobile |
 
+> **Concrete values:** §7 defines the design system architecture — token naming, scales, and structural rules. The confirmed hex values, font families, and pixel values for every token are specified in **§8 Design Tokens — Global Design System**.
+
 ---
 
-## 8. Header Builder Architecture
+## 8. Design Tokens — Global Design System
 
-### 8.1 Approach
+> This section defines the global design language and concrete token values for Torongo. All visual decisions in `theme.json`, CSS variables, FSE templates, header/footer template parts, homepage sections, WooCommerce components, and responsive layouts **must strictly follow these tokens**. No visual value may be introduced directly into implementation unless documented here. This section resolves open decisions DS1 (font family) and DS2 (brand color palette) from §28.3.
+
+### 8.1 Design Philosophy
+
+**Style Direction:**
+
+| Quality | Description |
+|---|---|
+| Modern | Clean, contemporary visual language |
+| Premium | High-quality finish, intentional use of space |
+| Compact eCommerce | Efficient layout with minimal vertical wastage |
+| Mobile-first | Base experience optimized for phone, progressively enhanced up |
+| High readability | Clear typographic hierarchy, adequate contrast |
+| Balanced white space | Not sparse, not cramped — purposefully spacious |
+| Soft shadows | Subtle depth cues, not heavy material-design shadows |
+| Subtle animations | Motion that aids comprehension, never distracts |
+| Professional | Corporate-safe appearance suitable for premium brands |
+
+**Layout Character:**
+- Compact information density
+- Minimal wasted vertical space
+- Clear visual hierarchy
+- Large clickable areas (WCAG touch-target compliant — 44px minimum)
+- Consistent spacing rhythm
+
+---
+
+### 8.2 Color System
+
+**Rule:** No hardcoded hex values anywhere in SCSS, templates, or PHP output. All colors must reference a `theme.json` CSS custom property via `var(--wp--preset--color--{slug})`.
+
+#### 8.2.1 Brand Colors
+
+| Token | Slug | Hex | Usage |
+|---|---|---|---|
+| Primary | `primary` | `#2D7CC4` | CTAs, links, interactive action elements |
+| Primary Hover | `primary-hover` | `#2569A6` | Hover state on primary elements |
+| Primary Active | `primary-active` | `#1E578A` | Active / pressed state |
+| Secondary | `secondary` | `#0F2942` | Dark supporting brand color |
+| Secondary Hover | `secondary-hover` | `#1A3856` | Hover state on secondary elements |
+| Accent | `accent` | `#F4A940` | High-emphasis highlights, sale badges, ratings |
+
+#### 8.2.2 Semantic Colors
+
+| Token | Slug | Hex | Usage |
+|---|---|---|---|
+| Success | `success` | `#22A06B` | In-stock, order confirmed, positive states |
+| Warning | `warning` | `#E9A23B` | Low stock, pending, caution states |
+| Error | `error` | `#DC4C4C` | Validation errors, out-of-stock, destructive actions |
+| Info | `info` | `#3B82F6` | Informational notices, help text |
+
+#### 8.2.3 Neutral Colors
+
+| Token | Slug | Hex | Usage |
+|---|---|---|---|
+| White | `white` | `#FFFFFF` | Explicit white surfaces |
+| Background | `background` | `#F7FAFC` | Page background |
+| Surface | `surface` | `#FFFFFF` | Card / panel background |
+| Surface Secondary | `surface-secondary` | `#F0F5F9` | Alternate surface (table rows, sidebar) |
+| Border | `border` | `#D8E2EC` | Default border color |
+| Divider | `divider` | `#C8D4DF` | Horizontal rules, section dividers |
+| Text Primary | `text` | `#172A3A` | Body text, headings |
+| Text Secondary | `text-secondary` | `#4B6072` | Supporting text, meta, captions |
+| Text Tertiary | `text-tertiary` | `#738496` | Placeholder text, disabled labels |
+| Disabled | `disabled` | `#A5B3C0` | Disabled element foreground |
+
+#### 8.2.4 Dark Mode Tokens
+
+| Token | Slug | Hex |
+|---|---|---|
+| Dark Background | `dark-background` | `#0B1622` |
+| Dark Surface | `dark-surface` | `#132333` |
+| Dark Border | `dark-border` | `#294154` |
+| Dark Text Primary | `dark-text` | `#F8FAFC` |
+| Dark Text Secondary | `dark-text-secondary` | `#D5E0EA` |
+
+**Note:** Dark mode implementation is Phase 5 scope. Tokens are defined here to lock the palette before implementation.
+
+#### 8.2.5 UI Support Colors
+
+| Token | Slug | Hex | Usage |
+|---|---|---|---|
+| Badge New | `badge-new` | `#2D7CC4` | "New" product badge (alias of `primary`) |
+| Badge Sale | `badge-sale` | `#DC4C4C` | "Sale" product badge (alias of `error`) |
+| Badge Hot | `badge-hot` | `#F4A940` | "Hot" product badge (alias of `accent`) |
+| Badge Featured | `badge-featured` | `#22A06B` | "Featured" product badge (alias of `success`) |
+| Rating Star | `rating-star` | `#F4A940` | Star rating fill (alias of `accent`) |
+| Price Highlight | `price-highlight` | `#2D7CC4` | Regular price display (alias of `primary`) |
+| Discount Price | `discount-price` | `#DC4C4C` | Sale / reduced price display (alias of `error`) |
+
+#### 8.2.6 Gradient Tokens
+
+Registered in `theme.json` under `settings.color.gradients`. Used via `var(--wp--preset--gradient--{slug})`.
+
+| Token | Slug | Value |
+|---|---|---|
+| Primary Gradient | `primary-gradient` | `linear-gradient(135deg, #2D7CC4 0%, #3D92DE 100%)` |
+| Hero Gradient | `hero-gradient` | `linear-gradient(135deg, #0F2942 0%, #2D7CC4 100%)` |
+| Accent Gradient | `accent-gradient` | `linear-gradient(135deg, #F4A940 0%, #F8C15C 100%)` |
+
+---
+
+### 8.3 Typography System
+
+**Resolves open decision DS1:** Font family is confirmed as **Inter** for both heading and body text.
+
+#### 8.3.1 Font Families
+
+| Role | Family | Fallback | `theme.json` slug |
+|---|---|---|---|
+| Heading | Inter | sans-serif | `heading` |
+| Body | Inter | sans-serif | `body` |
+| Mono | System stack | `ui-monospace, monospace` | `mono` |
+
+**Font Registration:** Inter is self-hosted as WOFF2. Font files are placed in `assets/fonts/inter/`. Registered via `theme.json` `settings.typography.fontFamilies[].fontFace` with `font-display: swap`.
+
+#### 8.3.2 Font Size Scale
+
+The following sizes are the concrete `max` target values for each fluid token defined in §7.2. WordPress `fluid: true` generates `clamp()` automatically.
+
+| Token | Slug | Max Size | Fluid Range (min → max) |
+|---|---|---|---|
+| Small | `sm` | 14px | 13px → 14px |
+| Base | `base` | 16px | 15px → 16px |
+| Medium | `md` | 18px | 17px → 18px |
+| Large | `lg` | 20px | 19px → 22px |
+| XL | `xl` | 24px | 22px → 28px |
+| 2XL | `2xl` | 30px | 26px → 36px |
+| 3XL | `3xl` | 36px | 32px → 48px |
+| 4XL | `4xl` | 48px | 40px → 60px |
+| 5XL / Display | `5xl` | 80px | 48px → 80px |
+
+#### 8.3.3 Font Weight Scale
+
+| Name | Value | Usage |
+|---|---|---|
+| Light | 300 | Secondary display contexts only |
+| Regular | 400 | Body text default |
+| Medium | 500 | UI labels, card titles, buttons |
+| SemiBold | 600 | Subheadings, navigation items |
+| Bold | 700 | Headings |
+| ExtraBold | 800 | Hero headings only |
+
+#### 8.3.4 Line Heights
+
+| Name | Value | Usage |
+|---|---|---|
+| Tight | 1.2 | Headings, hero text |
+| Normal | 1.5 | Body text, cards, UI |
+| Relaxed | 1.8 | Long-form content, blog posts |
+
+> **§7.2 reconciliation:** §7.2 listed `relaxed` as 1.75. §8.3.4 sets the confirmed value as **1.8**.
+
+#### 8.3.5 Letter Spacing
+
+| Name | Value | Usage |
+|---|---|---|
+| Tight | -0.02em | Large display headings |
+| Normal | 0 | Body text default |
+| Wide | 0.02em | Uppercase labels, badges, captions |
+
+---
+
+### 8.4 Spacing System
+
+**Base unit:** 4px (minimum token increment). The primary spacing rhythm is **8px** — consistent with §7.3.
+
+#### 8.4.1 Named Token Scale
+
+| Named Alias | Value | Maps to §7.3 Numeric Token |
+|---|---|---|
+| `xs` | 4px | `10` |
+| `sm` | 8px | `20` |
+| `md` | 16px | `40` |
+| `lg` | 24px | `50` |
+| `xl` | 32px | `60` |
+| `2xl` | 48px | `70` |
+| `3xl` | 64px | `80` |
+| `4xl` | 80px | *(between `80` and `90`)* |
+
+> The full §7.3 numeric spacing token set (`10` through `100`) remains defined and authoritative. The named alias layer above is for semantic clarity in SCSS and pattern HTML.
+
+#### 8.4.2 Section Vertical Spacing
+
+| Breakpoint | Value |
+|---|---|
+| Desktop | 48px (`2xl` / token `70`) |
+| Tablet | 40px |
+| Mobile | 32px (`xl` / token `60`) |
+
+#### 8.4.3 Element Gap Defaults
+
+| Context | Value |
+|---|---|
+| Default gap | 16px (`md` / token `40`) |
+| Compact gap | 8px (`sm` / token `20`) |
+| Large gap | 24px (`lg` / token `50`) |
+
+---
+
+### 8.5 Layout System
+
+| Setting | Value | Reference |
+|---|---|---|
+| Container max-width | 1440px | Outer bounding box |
+| Content width (`wideSize`) | 1200px | `theme.json` — see §7.6 |
+| Blog content width (`contentSize`) | 800px | `theme.json` — see §7.6 |
+| Sidebar width | 300px | Shop filter sidebar |
+| Desktop grid columns | 12 | |
+| Tablet grid columns | 8 | |
+| Mobile grid columns | 4 | |
+
+**Breakpoint summary** (full breakpoint table in §14.1):
+
+| Name | Range |
+|---|---|
+| Mobile | 0–767px |
+| Tablet | 768–1023px |
+| Desktop | 1024px+ |
+
+---
+
+### 8.6 Border Radius System
+
+Border radii are registered as custom CSS properties: `var(--torongo-radius-{name})` in SCSS.
+
+| Name | Value | Usage |
+|---|---|---|
+| None | 0px | Hard-edge elements |
+| Small | 4px | Input chips, small tags |
+| Medium | 8px | Buttons, standard cards (default) |
+| Large | 12px | Product cards |
+| XL | 16px | Large cards, modals, panels |
+| Round | 999px | Pill badges, circular elements |
+
+**Component defaults:**
+
+| Component | Radius |
+|---|---|
+| General default | 8px (Medium) |
+| Buttons | 8px (Medium) |
+| Product cards | 12px (Large) |
+| Inputs / textareas | 8px (Medium) |
+| Badges | 999px (Round) |
+
+> **§7.4 reconciliation:** §7.4 defined `radius-lg` as 16px. §8.6 introduces an explicit 12px step (Large) for product cards. The `radius-lg` slug retains its 16px value for modals and large panels; `radius-xl` from §7.4 (24px) is superseded by the 16px XL value in this table.
+
+---
+
+### 8.7 Shadow System
+
+Registered in `theme.json` under `settings.shadow.presets`. Reference via `var(--wp--preset--shadow--{slug})`.
+
+| Name | Slug | Value | Usage |
+|---|---|---|---|
+| Small | `shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle card elevation |
+| Medium | `shadow-md` | `0 4px 8px rgba(0,0,0,0.08)` | Standard card/component elevation |
+| Large | `shadow-lg` | `0 8px 24px rgba(0,0,0,0.12)` | Modal, dropdown, drawer elevation |
+| Hover | `shadow-hover` | `0 12px 30px rgba(0,0,0,0.15)` | Interactive card hover state |
+
+---
+
+### 8.8 Animation System
+
+**Rule:** All transitions and animations must respect `prefers-reduced-motion`. See §16.2 for the implementation requirement.
+
+| Name | Duration | Usage |
+|---|---|---|
+| Fast | 150ms | Micro-interactions (button press, focus ring) |
+| Normal | 250ms | State transitions (hover, open/close) |
+| Slow | 350ms | Panel slides, drawer open/close |
+
+| Property | Value |
+|---|---|
+| Default easing | `ease-in-out` |
+| Hover pattern | `transform: translateY(-2px)` + shadow transition |
+| Maximum duration | 500ms — no animation may exceed this value |
+
+Avoid excessive motion. Carousels: auto-play is off by default.
+
+---
+
+### 8.9 Button System
+
+| Property | Value |
+|---|---|
+| Primary style | Filled — solid `primary` background, white text |
+| Secondary style | Outline — 1px `primary` border, transparent background |
+| Height | 44px minimum (WCAG 2.2 touch-target requirement) |
+| Padding | `14px 24px` |
+| Font weight | 500 (Medium) |
+| Font size | `base` (16px) |
+| Transition | `background-color`, `box-shadow` at 250ms `ease-in-out` |
+| Border radius | 8px (Medium) |
+
+---
+
+### 8.10 Product Card System
+
+| Property | Value |
+|---|---|
+| Card background | `surface` (`#FFFFFF`) |
+| Image aspect ratio | 1:1 square, enforced via CSS `aspect-ratio: 1` |
+| Hover effect | `transform: translateY(-4px)` + `shadow-hover` |
+| Content alignment | Left-aligned |
+| Card padding | 16px (`md`) |
+| Badge border radius | 999px (Round) |
+| Card border radius | 12px (Large) |
+
+---
+
+### 8.11 Header Tokens
+
+| Property | Desktop | Tablet | Mobile |
+|---|---|---|---|
+| Header height | 80px | 72px | 64px |
+| Sticky header | Enabled | Enabled | Enabled |
+| Transparent header | Supported (opt-in per template part) | — | — |
+
+---
+
+### 8.12 Footer Tokens
+
+| Property | Value |
+|---|---|
+| Background color | `secondary` (`#0F2942`) |
+| Text color | `white` (`#FFFFFF`) |
+| Vertical padding (top and bottom) | 48px (`2xl`) |
+
+---
+
+### 8.13 Responsive Token Rules
+
+Every design token that controls a visual dimension must define values for Desktop, Tablet, and Mobile where variance exists. This applies to:
+
+- **Spacing** — section padding, element gaps (see §8.4.2)
+- **Layout** — widths, sidebar, grid columns (see §8.5)
+- **Component heights** — header height per breakpoint (see §8.11)
+- **Typography** — scales automatically via fluid `clamp()` (no per-breakpoint font-size overrides needed)
+- **Visibility and ordering** — controlled via Block Visibility in Site Editor
+
+---
+
+### 8.14 Implementation Rules
+
+1. **No hardcoded colors** — use `var(--wp--preset--color--{slug})`
+2. **No hardcoded typography values** — use `theme.json` font-size and font-family presets
+3. **No hardcoded spacing values** — use `var(--wp--preset--spacing--{token})`
+4. **No magic numbers** — any value not documented in this section requires a spec update before use
+5. **All new tokens here first** — every future visual addition must be documented in §8 before implementation begins
+
+---
+
+## 9. Header Builder Architecture
+
+### 9.1 Approach
 
 The header is managed entirely through the **Site Editor** (FSE) using block template parts. There is no PHP-based header builder. The "builder" experience is achieved by:
 
@@ -641,7 +999,7 @@ The header is managed entirely through the **Site Editor** (FSE) using block tem
 3. **Navigation block** — all menus managed through the WordPress Navigation block
 4. **Synced template parts** — header is a synced template part, edited once, reflected everywhere
 
-### 8.2 Template Part Variations
+### 9.2 Template Part Variations
 
 | File | Use Case | Features |
 |---|---|---|
@@ -651,7 +1009,7 @@ The header is managed entirely through the **Site Editor** (FSE) using block tem
 
 **Assumption documented:** A "mega menu" capability is planned as a custom block (`torongo/mega-menu`) but its behavior is controlled via the block's settings panel, not a separate header part.
 
-### 8.3 Header Structural Regions
+### 9.3 Header Structural Regions
 
 The default header is composed of these logical regions (each a separate Group block within the template part):
 
@@ -664,11 +1022,11 @@ The default header is composed of these logical regions (each a separate Group b
 3. **Secondary Nav Row** (optional, togglable)  
    - Category mega-menu or secondary navigation
 
-### 8.4 Mini-Cart
+### 9.4 Mini-Cart
 
 The mini-cart in the header uses the **WooCommerce Mini Cart Block**. No custom PHP mini-cart implementation. Styling is applied via SCSS targeting WooCommerce block CSS classes.
 
-### 8.5 Sticky Header Behavior
+### 9.5 Sticky Header Behavior
 
 Sticky behavior is implemented via:
 - CSS `position: sticky` as the baseline
@@ -678,7 +1036,7 @@ Sticky behavior is implemented via:
   - Uses `IntersectionObserver`, not `scroll` event listener
   - Is initialized via `wp.domReady`
 
-### 8.6 Header Hooks
+### 9.6 Header Hooks
 
 The PHP layer exposes hooks for child theme modifications:
 
@@ -692,13 +1050,13 @@ The PHP layer exposes hooks for child theme modifications:
 
 ---
 
-## 9. Footer Builder Architecture
+## 10. Footer Builder Architecture
 
-### 9.1 Approach
+### 10.1 Approach
 
 Identical to the header: footer is managed via FSE template parts. Multiple pre-designed footer variations are provided.
 
-### 9.2 Template Part Variations
+### 10.2 Template Part Variations
 
 | File | Use Case | Layout |
 |---|---|---|
@@ -706,7 +1064,7 @@ Identical to the header: footer is managed via FSE template parts. Multiple pre-
 | `parts/footer-minimal.html` | Landing pages, thank-you | Logo + copyright + minimal links |
 | `parts/footer-shop.html` | Shops with newsletter | Newsletter signup + 3 columns + trust badges |
 
-### 9.3 Footer Structural Regions
+### 10.3 Footer Structural Regions
 
 **Default Footer:**
 1. **Footer Widget Area** (4-column grid of Group blocks)
@@ -721,7 +1079,7 @@ Identical to the header: footer is managed via FSE template parts. Multiple pre-
    - Copyright text (uses dynamic Post Meta block or custom text)
    - Footer navigation (legal, privacy, terms)
 
-### 9.4 Footer Hooks
+### 10.4 Footer Hooks
 
 | Hook | Type | Location |
 |---|---|---|
@@ -731,13 +1089,13 @@ Identical to the header: footer is managed via FSE template parts. Multiple pre-
 
 ---
 
-## 10. Homepage System Architecture
+## 11. Homepage System Architecture
 
-### 10.1 Template
+### 11.1 Template
 
 The homepage uses `templates/front-page.html`. It is the most pattern-dense template in the theme.
 
-### 10.2 Section Architecture
+### 11.2 Section Architecture
 
 The homepage is assembled from **registered block patterns**, each mapped to a logical section:
 
@@ -753,7 +1111,7 @@ The homepage is assembled from **registered block patterns**, each mapped to a l
 | Newsletter CTA | `cta-newsletter` | Email capture |
 | Blog Preview | `content-blog-grid` | Recent posts section |
 
-### 10.3 Default Homepage Assembly
+### 11.3 Default Homepage Assembly
 
 The shipped default `front-page.html` assembles:
 1. `hero-full` — full-width hero with headline, subheadline, CTA
@@ -764,7 +1122,7 @@ The shipped default `front-page.html` assembles:
 6. `testimonials-grid` — testimonials
 7. `cta-newsletter` — newsletter signup
 
-### 10.4 Homepage Customization Rules
+### 11.4 Homepage Customization Rules
 
 - All section visibility is controlled by the **Block Visibility** toggle in the Site Editor
 - The order of sections is controlled by dragging blocks in the Site Editor
@@ -773,9 +1131,9 @@ The shipped default `front-page.html` assembles:
 
 ---
 
-## 11. Customization Architecture
+## 12. Customization Architecture
 
-### 11.1 Customization Tiers
+### 12.1 Customization Tiers
 
 Torongo supports four tiers of customization, in ascending order of complexity:
 
@@ -786,7 +1144,7 @@ Torongo supports four tiers of customization, in ascending order of complexity:
 | 3 | Child theme — `theme.json` | Developer | JSON only |
 | 4 | Child theme — PHP hooks + SCSS | Developer | Yes |
 
-### 11.2 Global Styles (Tier 1)
+### 12.2 Global Styles (Tier 1)
 
 Users can change all `theme.json`-exposed settings via **Appearance → Editor → Styles**:
 - Color palette selections
@@ -796,7 +1154,7 @@ Users can change all `theme.json`-exposed settings via **Appearance → Editor �
 
 **Rule:** All design tokens that should be user-adjustable MUST be declared in `theme.json` under `settings`. Hardcoded SCSS values that bypass design tokens are **prohibited**.
 
-### 11.3 Child Theme Customization (Tier 3 & 4)
+### 12.3 Child Theme Customization (Tier 3 & 4)
 
 Child theme architecture:
 
@@ -814,7 +1172,7 @@ torongo-child/
 
 **Rule:** Child `functions.php` must call `wp_enqueue_scripts` with `parent-style` as a dependency when enqueuing child stylesheet.
 
-### 11.4 Customization via Hooks
+### 12.4 Customization via Hooks
 
 All major output points in PHP expose hooks. Child themes hook into these to:
 - Add content before/after structural sections
@@ -822,13 +1180,13 @@ All major output points in PHP expose hooks. Child themes hook into these to:
 - Replace or remove default outputs
 - Add custom structured data
 
-See Section 19 for the full hooks and filters catalog.
+See Section 20 for the full hooks and filters catalog.
 
 ---
 
-## 12. WooCommerce Integration Architecture
+## 13. WooCommerce Integration Architecture
 
-### 12.1 Compatibility Declaration
+### 13.1 Compatibility Declaration
 
 WooCommerce compatibility is declared in `functions.php` using:
 - `add_theme_support('woocommerce')` — core compatibility
@@ -839,7 +1197,7 @@ WooCommerce compatibility is declared in `functions.php` using:
 
 These are registered in `Torongo\Core\ThemeSupport::register()`.
 
-### 12.2 WooCommerce Block Templates
+### 13.2 WooCommerce Block Templates
 
 WooCommerce 10.7.0 block templates are overridden in `/templates/`:
 
@@ -850,7 +1208,7 @@ WooCommerce 10.7.0 block templates are overridden in `/templates/`:
 | `taxonomy-product_cat.html` | Category archive | Category-branded shop listing |
 | `taxonomy-product_tag.html` | Tag archive | Tag-filtered product listing |
 
-### 12.3 Single Product Page (PDP) Architecture
+### 13.3 Single Product Page (PDP) Architecture
 
 `single-product.html` uses WooCommerce product blocks assembled as:
 
@@ -876,7 +1234,7 @@ WooCommerce 10.7.0 block templates are overridden in `/templates/`:
 
 **Product Schema:** Injected via `Torongo\WooCommerce\Schema::output()` hooked into `woocommerce_single_product_summary`.
 
-### 12.4 Shop / Archive Page Architecture
+### 13.4 Shop / Archive Page Architecture
 
 `archive-product.html` uses:
 - **Top Row:** Page title + product count + sort-by dropdown
@@ -888,7 +1246,7 @@ WooCommerce 10.7.0 block templates are overridden in `/templates/`:
   - Default: 4 columns desktop, 2 columns mobile
   - Pagination at bottom (infinite scroll as an option via JS module)
 
-### 12.5 Product Card Architecture
+### 13.5 Product Card Architecture
 
 The product card used within the Products block grid is styled entirely via SCSS targeting WooCommerce block CSS classes. The card anatomy:
 
@@ -903,7 +1261,7 @@ The product card used within the Products block grid is styled entirely via SCSS
 
 **Rule:** Product card hover effects use CSS-only transitions where possible. JS is only used for quick-view modal triggering.
 
-### 12.6 Cart Architecture
+### 13.6 Cart Architecture
 
 Cart uses the **WooCommerce Cart Block** exclusively. No `cart.php` override. Styling via SCSS.
 
@@ -912,7 +1270,7 @@ Custom additions via hooks:
 - `woocommerce_after_cart_table` — cross-sell products
 - `woocommerce_cart_totals_before_order_total` — savings summary line
 
-### 12.7 Checkout Architecture
+### 13.7 Checkout Architecture
 
 Checkout uses the **WooCommerce Checkout Block** exclusively. No `checkout.php` override.
 
@@ -923,13 +1281,13 @@ Custom additions:
 
 **Note on Checkout:** WooCommerce 10.7.0 block checkout is assumed to expose all necessary extensibility APIs. If a feature cannot be achieved via WooCommerce's block extensibility APIs, document it as a known limitation and use the `woocommerce_checkout_*` hooks as a fallback.
 
-### 12.8 My Account Architecture
+### 13.8 My Account Architecture
 
 My Account uses a mix:
 - WooCommerce My Account Block (if available in 10.7.0) for the account dashboard overview
 - PHP template overrides in `/woocommerce/myaccount/` for specific account pages (orders, view-order) where block coverage is incomplete
 
-### 12.9 WooCommerce Email Templates
+### 13.9 WooCommerce Email Templates
 
 Email templates in `/woocommerce/emails/` override only:
 - `email-header.php` — injects brand logo and colors
@@ -937,7 +1295,7 @@ Email templates in `/woocommerce/emails/` override only:
 
 All other email templates use WooCommerce defaults. Email styling uses inline CSS (WooCommerce email standard). The `Torongo\WooCommerce\Manager` class filters `woocommerce_email_styles` to inject brand color tokens.
 
-### 12.10 WooCommerce Hooks Used
+### 13.10 WooCommerce Hooks Used
 
 **Actions attached (theme → WooCommerce):**
 
@@ -960,9 +1318,9 @@ All other email templates use WooCommerce defaults. Email styling uses inline CS
 
 ---
 
-## 13. Responsive Architecture
+## 14. Responsive Architecture
 
-### 13.1 Breakpoint System
+### 14.1 Breakpoint System
 
 Breakpoints are defined once in `src/scss/utilities/_mixins.scss` as SCSS variables and mixins. The same values are exposed to JavaScript via `wp_localize_script()` in `Torongo\Core\Assets`, which injects them as `window.torongoData.breakpoints`. PHP constants declared at the top of `inc/helpers/template-helpers.php` (e.g. `TORONGO_BP_TABLET = 768`) serve as the single authoritative source, consumed by both the Assets class (for JS serialization) and documented in SCSS comments for alignment. `theme.json` does not have a breakpoints key and cannot expose breakpoints to JavaScript.
 
@@ -977,7 +1335,7 @@ Breakpoints are defined once in `src/scss/utilities/_mixins.scss` as SCSS variab
 
 The `desktop` breakpoint (1200px) aligns with `theme.json` `wideSize` as the primary layout width.
 
-### 13.2 SCSS Breakpoint Mixins
+### 14.2 SCSS Breakpoint Mixins
 
 Four mixing patterns are used:
 
@@ -988,11 +1346,11 @@ Four mixing patterns are used:
 
 **Rule:** Mobile-first approach. Base SCSS is written for mobile. `@include tablet-up` and `@include desktop-up` progressively enhance.
 
-### 13.3 Fluid Typography
+### 14.3 Fluid Typography
 
 All font sizes use CSS `clamp()` generated by `theme.json`'s `fluid: true` setting. No fixed `px` or `rem` font sizes anywhere in SCSS. This means text scales smoothly without breakpoint jumps.
 
-### 13.4 Fluid Spacing
+### 14.4 Fluid Spacing
 
 Key section paddings use `clamp()` for fluid spacing:
 ```
@@ -1000,14 +1358,14 @@ padding-block: clamp(var(--wp--preset--spacing--70), 8vw, var(--wp--preset--spac
 ```
 This is defined as a named spacing preset where appropriate, otherwise applied directly in pattern HTML.
 
-### 13.5 Responsive Images
+### 14.5 Responsive Images
 
 - All theme images use `srcset` and `sizes` attributes via `wp_get_attachment_image()` or the Image block
 - Hero images use the `cover` image block with a defined aspect-ratio constraint
 - Product images use a fixed aspect ratio (1:1 default, configurable via theme.json per-block settings)
 - No images are hardcoded at fixed pixel dimensions; all use relative units
 
-### 13.6 WooCommerce Responsive Grid
+### 14.6 WooCommerce Responsive Grid
 
 | Layout | Mobile | Tablet | Desktop |
 |---|---|---|---|
@@ -1020,13 +1378,13 @@ Grid column configuration is done in `theme.json` under `settings.blocks.woocomm
 
 ---
 
-## 14. SEO Architecture
+## 15. SEO Architecture
 
-### 14.1 Philosophy
+### 15.1 Philosophy
 
 Torongo provides SEO **foundations**, not a full SEO plugin. Full SEO management (meta tags, sitemaps, canonical URLs) is delegated to a dedicated SEO plugin (Yoast SEO or RankMath). The theme does not duplicate plugin functionality.
 
-### 14.2 Theme SEO Responsibilities
+### 15.2 Theme SEO Responsibilities
 
 `Torongo\SEO\Manager` handles:
 
@@ -1056,17 +1414,17 @@ Torongo provides SEO **foundations**, not a full SEO plugin. Full SEO management
    - Theme does NOT add duplicate canonical tags
 
 6. **Performance as SEO**
-   - Core Web Vitals targets influence all performance decisions (see Section 17)
+   - Core Web Vitals targets influence all performance decisions (see Section 18)
 
 ---
 
-## 15. Accessibility Architecture
+## 16. Accessibility Architecture
 
-### 15.1 WCAG Target
+### 16.1 WCAG Target
 
 **WCAG 2.2 Level AA** is the minimum compliance target. Level AAA success criteria are pursued where practical.
 
-### 15.2 Accessibility Implementation Areas
+### 16.2 Accessibility Implementation Areas
 
 `Torongo\Accessibility\Manager` handles:
 
@@ -1117,9 +1475,9 @@ Torongo provides SEO **foundations**, not a full SEO plugin. Full SEO management
 
 ---
 
-## 16. Database Usage
+## 17. Database Usage
 
-### 16.1 Philosophy
+### 17.1 Philosophy
 
 Torongo minimizes database footprint. All customization data is stored in:
 1. WordPress core tables (posts, options, usermeta) via standard WordPress APIs
@@ -1127,7 +1485,7 @@ Torongo minimizes database footprint. All customization data is stored in:
 
 No custom database tables are created by Torongo v1.0.
 
-### 16.2 Options Storage
+### 17.2 Options Storage
 
 Theme-specific options are stored in `wp_options` using the `torongo_` prefix:
 
@@ -1138,7 +1496,7 @@ Theme-specific options are stored in `wp_options` using the `torongo_` prefix:
 
 No custom options panel exists in v1.0. All design customization is in `theme.json` / Global Styles. All behavior customization is in `wp_options` only via WordPress core mechanisms (menus, widgets, etc. are obsolete in FSE).
 
-### 16.3 Transient Caching
+### 17.3 Transient Caching
 
 WooCommerce queries that cannot be handled natively by WooCommerce's own cache are cached using transients:
 
@@ -1149,19 +1507,19 @@ WooCommerce queries that cannot be handled natively by WooCommerce's own cache a
 
 **Rule:** All transients must be deleted on `woocommerce_product_set_stock`, `save_post_product`, and related hooks to prevent stale data.
 
-### 16.4 User Meta
+### 17.4 User Meta
 
 No custom user meta is stored by Torongo v1.0.
 
-### 16.5 Post Meta
+### 17.5 Post Meta
 
 No custom post meta is stored by Torongo v1.0. Any product-level customization uses WooCommerce's existing post meta system.
 
 ---
 
-## 17. Performance Strategy
+## 18. Performance Strategy
 
-### 17.1 Core Web Vitals Targets
+### 18.1 Core Web Vitals Targets
 
 | Metric | Target | Strategy |
 |---|---|---|
@@ -1171,14 +1529,14 @@ No custom post meta is stored by Torongo v1.0. Any product-level customization u
 | FCP (First Contentful Paint) | < 1.8s | Critical CSS inline, deferred non-critical |
 | TTFB (Time to First Byte) | < 800ms | Server-side caching, not theme concern |
 
-### 17.2 CSS Performance
+### 18.2 CSS Performance
 
 - **Block-level CSS splitting:** Each custom block has its own CSS file, loaded only when the block is present on the page (WordPress handles this natively for blocks registered with `style` handles)
 - **Critical CSS:** Above-the-fold styles for the header, hero, and product grid are output directly to `<head>` via `add_action( 'wp_head', [ $this, 'output_critical_css' ], 1 )` in `Torongo\Core\Assets`. Using `wp_head` at priority 1 ensures the `<style>` tag fires before any enqueued stylesheets, achieving true render-critical inlining. The CSS string is generated as a separate file during the build step and read from disk at runtime. `wp_add_inline_style()` is **not** used for this purpose — it appends styles after an existing enqueued handle and cannot guarantee head placement.
 - **CSS Custom Properties:** Eliminates duplicate value declarations — one property, referenced everywhere
 - **No CSS framework:** No unused CSS from Bootstrap/Tailwind bloat
 
-### 17.3 JavaScript Performance
+### 18.3 JavaScript Performance
 
 - **No jQuery:** All theme JS is vanilla ES2022+. jQuery is not enqueued unless a plugin requires it.
 - **Deferred loading:** All frontend JS uses `defer` attribute (set via `wp_script_add_data('handle', 'defer', true)`)
@@ -1186,7 +1544,7 @@ No custom post meta is stored by Torongo v1.0. Any product-level customization u
 - **Intersection Observer:** Used for lazy initialization of off-screen components (carousels, animation triggers, infinite scroll)
 - **No third-party analytics in theme:** No Google Analytics, Facebook Pixel, etc. baked into theme. These are plugin/tag-manager concerns.
 
-### 17.4 Image Performance
+### 18.4 Image Performance
 
 - **WebP support:** All theme-generated `srcset` includes WebP variants when WordPress generates them
 - **Native lazy loading:** All non-hero images use `loading="lazy"` 
@@ -1194,7 +1552,7 @@ No custom post meta is stored by Torongo v1.0. Any product-level customization u
 - **Image dimensions always defined:** Prevents CLS from undimensioned images
 - **Placeholder images:** Products without images use a theme-provided SVG placeholder (not an external URL)
 
-### 17.5 Font Performance
+### 18.5 Font Performance
 
 - **Self-hosted fonts only:** No Google Fonts or external font CDN (privacy + performance)
 - **WOFF2 format only:** Smallest file size, 95%+ browser support
@@ -1203,13 +1561,13 @@ No custom post meta is stored by Torongo v1.0. Any product-level customization u
 - **Preconnect:** Not needed since fonts are self-hosted
 - **Font preload:** `<link rel="preload" as="font">` for the primary body and heading fonts, added via `wp_head`
 
-### 17.6 WooCommerce Performance
+### 18.6 WooCommerce Performance
 
-- **Transient caching:** See Section 16.3 for cached WooCommerce queries
+- **Transient caching:** See Section 17.3 for cached WooCommerce queries
 - **Selective WooCommerce script loading:** WooCommerce scripts only enqueued on WooCommerce pages (not blog posts, not static pages) via `is_woocommerce()` and `is_cart()` / `is_checkout()` checks
 - **Cart fragments optimization:** WooCommerce cart fragment AJAX is limited to WooCommerce pages only (not every page load). Configurable via `woocommerce_cart_fragment_requests` filter.
 
-### 17.7 Caching Compatibility
+### 18.7 Caching Compatibility
 
 Torongo is compatible with and tested against:
 - **WP Rocket** — no theme-specific WP Rocket config; theme output is static-friendly
@@ -1219,9 +1577,9 @@ Torongo is compatible with and tested against:
 
 ---
 
-## 18. Security Strategy
+## 19. Security Strategy
 
-### 18.1 Input Sanitization
+### 19.1 Input Sanitization
 
 **Rule:** Every piece of data entering the system (from `$_GET`, `$_POST`, `$_REQUEST`, database reads of user-supplied data) must be sanitized before use.
 
@@ -1239,7 +1597,7 @@ Sanitization functions used by context:
 | File name | `sanitize_file_name()` |
 | Array of text | `array_map('sanitize_text_field', ...)` |
 
-### 18.2 Output Escaping
+### 19.2 Output Escaping
 
 **Rule:** Every piece of dynamic data output to HTML must be escaped at the point of output.
 
@@ -1257,14 +1615,14 @@ Escaping functions used by context:
 
 **Rule:** `echo $variable` without escaping is **prohibited**. No exceptions. PHPCS enforces this.
 
-### 18.3 Nonces
+### 19.3 Nonces
 
 All forms and AJAX requests that perform state-changing operations use WordPress nonces:
 - `wp_nonce_field()` in HTML forms
 - `check_admin_referer()` or `check_ajax_referer()` on the handler
 - Nonce names follow the pattern `torongo_{action}_nonce`
 
-### 18.4 Capability Checks
+### 19.4 Capability Checks
 
 **Rule:** Every admin action, AJAX handler, and REST endpoint registered by Torongo must check the current user's capability before executing.
 
@@ -1274,7 +1632,7 @@ if ( ! current_user_can( 'manage_options' ) ) {
 }
 ```
 
-### 18.5 Direct File Access Prevention
+### 19.5 Direct File Access Prevention
 
 **Rule:** Every PHP file (except `functions.php`, `index.php`, and template files that WordPress loads directly) must begin with:
 
@@ -1282,28 +1640,28 @@ if ( ! current_user_can( 'manage_options' ) ) {
 defined( 'ABSPATH' ) || exit;
 ```
 
-### 18.6 SQL Injection Prevention
+### 19.6 SQL Injection Prevention
 
 **Rule:** Never use raw SQL string concatenation. Always use `$wpdb->prepare()` for any custom queries (though Torongo v1.0 aims to use zero custom queries — all data access through WordPress/WooCommerce APIs).
 
-### 18.7 XSS Prevention
+### 19.7 XSS Prevention
 
-- Output escaping (Section 18.2) is the primary defense
+- Output escaping (Section 19.2) is the primary defense
 - Content Security Policy headers: Torongo adds recommended CSP headers via `send_headers` hook for environments that support it. Default policy: `default-src 'self'`, with appropriate exceptions for trusted WooCommerce payment gateways
 - `wp_enqueue_script` is used exclusively for all JavaScript (no inline `<script>` tags except for JSON-LD structured data, which is sanitized)
 
-### 18.8 CSRF Prevention
+### 19.8 CSRF Prevention
 
-- WordPress nonces on all forms (Section 18.3)
+- WordPress nonces on all forms (Section 19.3)
 - WooCommerce's own nonce system used for cart/checkout AJAX operations — no duplication
 
-### 18.9 Sensitive Data Handling
+### 19.9 Sensitive Data Handling
 
 - No API keys, credentials, or sensitive configuration in theme files
 - License keys (for premium distribution) handled via a separate plugin/updater mechanism, not stored in `wp_options` without encryption
 - Payment credentials handled entirely by WooCommerce payment gateways — theme has no access to payment data
 
-### 18.10 PHPCS Security Rules
+### 19.10 PHPCS Security Rules
 
 The `.phpcs.xml` configuration enforces:
 - `WordPress-Core` standard
@@ -1313,13 +1671,13 @@ The `.phpcs.xml` configuration enforces:
 
 ---
 
-## 19. Hooks and Filters Plan
+## 20. Hooks and Filters Plan
 
-### 19.1 Philosophy
+### 20.1 Philosophy
 
 Every meaningful output point exposes an action hook. Every filterable value exposes a filter hook. Hook names follow the pattern: `torongo_{context}_{timing}` for actions and `torongo_{context}_{value}` for filters.
 
-### 19.2 Action Hooks
+### 20.2 Action Hooks
 
 | Hook | Arguments | Description |
 |---|---|---|
@@ -1340,7 +1698,7 @@ Every meaningful output point exposes an action hook. Every filterable value exp
 | `torongo_checkout_trust_badges` | none | Inside checkout, trust badge placement |
 | `torongo_after_page_hero` | none | After page hero section |
 
-### 19.3 Filter Hooks
+### 20.3 Filter Hooks
 
 | Hook | Arguments | Return | Description |
 |---|---|---|---|
@@ -1357,7 +1715,7 @@ Every meaningful output point exposes an action hook. Every filterable value exp
 | `torongo_woocommerce_card_image_size` | `string $size` | `string` | Image size used in product card |
 | `torongo_404_suggestions` | `WP_Query $query` | `WP_Query` | Query for suggested posts on 404 page |
 
-### 19.4 Hooks Implementation Method
+### 20.4 Hooks Implementation Method
 
 Because Torongo is an FSE theme with HTML template parts, PHP hooks cannot be placed directly inside `.html` template part files. Implementation methods:
 
@@ -1367,13 +1725,13 @@ Because Torongo is an FSE theme with HTML template parts, PHP hooks cannot be pl
 
 ---
 
-## 20. Internationalization and Translation
+## 21. Internationalization and Translation
 
-### 20.1 Text Domain
+### 21.1 Text Domain
 
 The text domain for all theme strings is **`torongo`**. This matches the theme slug and directory name.
 
-### 20.2 Translation Functions
+### 21.2 Translation Functions
 
 | Context | Function |
 |---|---|
@@ -1385,7 +1743,7 @@ The text domain for all theme strings is **`torongo`**. This matches the theme s
 
 **Rule:** Every user-facing string (including screen-reader-only strings and ARIA labels) must use a translation function. No hardcoded English strings in output.
 
-### 20.3 POT File Generation
+### 21.3 POT File Generation
 
 The `torongo.pot` file is generated using WP-CLI:
 ```
@@ -1394,15 +1752,15 @@ wp i18n make-pot . languages/torongo.pot --domain=torongo
 
 This command is run as part of the release process.
 
-### 20.4 Block Pattern Translation
+### 21.4 Block Pattern Translation
 
 Block patterns using `.php` files (not `.html`) support translation via `_e()` calls in the pattern registration `content` argument. PHP block pattern files are preferred over HTML for any pattern containing user-facing text.
 
-### 20.5 JavaScript Translations
+### 21.5 JavaScript Translations
 
 JavaScript translation is handled via `wp_set_script_translations('torongo-frontend', 'torongo', get_template_directory() . '/languages')`. The `.json` translation files for JS are generated during the build process using `@wordpress/scripts`.
 
-### 20.6 RTL Support
+### 21.6 RTL Support
 
 - A `rtl.css` file is generated by the build process via `rtlcss`
 - WordPress automatically enqueues `rtl.css` when a RTL language is active
@@ -1410,9 +1768,9 @@ JavaScript translation is handled via `wp_set_script_translations('torongo-front
 
 ---
 
-## 21. Dependencies and Libraries
+## 22. Dependencies and Libraries
 
-### 21.1 PHP Dependencies (Composer)
+### 22.1 PHP Dependencies (Composer)
 
 | Package | Version | Purpose |
 |---|---|---|
@@ -1422,7 +1780,7 @@ JavaScript translation is handled via `wp_set_script_translations('torongo-front
 
 The `composer.json` file exists and defines PSR-4 autoloading for the `Torongo\` namespace pointing to `inc/classes/`.
 
-### 21.2 JavaScript Dependencies (npm)
+### 22.2 JavaScript Dependencies (npm)
 
 **`dependencies` (bundled into theme JS):**
 
@@ -1450,7 +1808,7 @@ The `composer.json` file exists and defines PSR-4 autoloading for the `Torongo\`
 
 **Note on Swiper:** Swiper is used for product image galleries and carousels. It is loaded only on pages that include the relevant blocks (conditional enqueuing via `wp_enqueue_script` called conditionally).
 
-### 21.3 WordPress Plugin Dependencies
+### 22.3 WordPress Plugin Dependencies
 
 **Required:**
 - WooCommerce 10.7.0+
@@ -1468,9 +1826,9 @@ The `composer.json` file exists and defines PSR-4 autoloading for the `Torongo\`
 
 ---
 
-## 22. Naming Conventions
+## 23. Naming Conventions
 
-### 22.1 PHP Naming
+### 23.1 PHP Naming
 
 | Element | Convention | Example |
 |---|---|---|
@@ -1484,7 +1842,7 @@ The `composer.json` file exists and defines PSR-4 autoloading for the `Torongo\`
 | Option keys | `torongo_{snake_case}` | `torongo_version` |
 | Transient keys | `torongo_{snake_case}` | `torongo_featured_products` |
 
-### 22.2 CSS / SCSS Naming
+### 23.2 CSS / SCSS Naming
 
 CSS classes use **BEM (Block__Element--Modifier)** methodology.
 
@@ -1502,7 +1860,7 @@ CSS classes use **BEM (Block__Element--Modifier)** methodology.
 
 **Rule:** WooCommerce block CSS classes (prefixed with `.wc-block-`) are never renamed. SCSS styles target these classes directly for WooCommerce surface styling.
 
-### 22.3 JavaScript Naming
+### 23.3 JavaScript Naming
 
 | Element | Convention | Example |
 |---|---|---|
@@ -1513,7 +1871,7 @@ CSS classes use **BEM (Block__Element--Modifier)** methodology.
 | File name | kebab-case | `sticky-header.js` |
 | Event name | `torongo:{camelCase}` | `torongo:cartUpdated` |
 
-### 22.4 File Naming
+### 23.4 File Naming
 
 | Type | Convention | Example |
 |---|---|---|
@@ -1526,7 +1884,7 @@ CSS classes use **BEM (Block__Element--Modifier)** methodology.
 | Block pattern | `{pattern-name}.php` | `hero-full.php` |
 | Block directory | `{block-name}/` | `countdown-timer/` |
 
-### 22.5 WordPress Block Naming
+### 23.5 WordPress Block Naming
 
 All custom blocks use the `torongo/` namespace:
 
@@ -1539,9 +1897,9 @@ All custom blocks use the `torongo/` namespace:
 
 ---
 
-## 23. Coding Standards
+## 24. Coding Standards
 
-### 23.1 PHP Standards
+### 24.1 PHP Standards
 
 - **Standard:** WordPress Coding Standards (WPCS) enforced by PHPCS
 - **Configuration:** `.phpcs.xml` at root
@@ -1552,7 +1910,7 @@ All custom blocks use the `torongo/` namespace:
 - **Nullable types:** Use `?Type` for nullable parameters; avoid union types unless necessary for clarity
 - **Docblocks:** Required for all public methods; optional for private/protected methods if the type hints are self-documenting
 
-### 23.2 JavaScript Standards
+### 24.2 JavaScript Standards
 
 - **Standard:** WordPress ESLint configuration (`@wordpress/eslint-plugin`)
 - **Configuration:** `.eslintrc.json` at root
@@ -1561,7 +1919,7 @@ All custom blocks use the `torongo/` namespace:
 - **Arrow functions:** Preferred for callbacks; avoid if `this` context is needed
 - **Async/await:** Preferred over Promise chains
 
-### 23.3 CSS Standards
+### 24.3 CSS Standards
 
 - **Standard:** Stylelint with `stylelint-config-wordpress` configuration
 - **Configuration:** `.stylelintrc.json` at root
@@ -1569,14 +1927,14 @@ All custom blocks use the `torongo/` namespace:
 - **Custom properties:** Only `var(--wp--*)` for design tokens; custom `--torongo-*` properties for computed values only
 - **No magic numbers:** All spacing/size values must reference a design token or be explicitly documented
 
-### 23.4 Git Standards
+### 24.4 Git Standards
 
 - **Branching:** `main` (production), `develop` (integration), `feature/{name}`, `fix/{name}`, `chore/{name}`
 - **Commit messages:** Conventional Commits format — `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`
 - **PR process:** All features require a PR against `develop`; `develop` merges to `main` for releases
 - **Version tags:** Semantic versioning — `v1.0.0`, `v1.0.1`, `v1.1.0`
 
-### 23.5 Build Standards
+### 24.5 Build Standards
 
 - **Source maps:** Generated in `development` mode; NOT included in production builds
 - **Minification:** All CSS and JS minified in production
@@ -1585,24 +1943,24 @@ All custom blocks use the `torongo/` namespace:
 
 ---
 
-## 24. Child Theme Compatibility
+## 25. Child Theme Compatibility
 
-### 24.1 Child Theme Contract
+### 25.1 Child Theme Contract
 
 Torongo guarantees the following for child themes:
 
-1. All hooks documented in Section 19 will remain stable across minor versions
+1. All hooks documented in Section 20 will remain stable across minor versions
 2. `theme.json` structure follows WordPress FSE specification; child themes can override any key
 3. Template files in `/templates/` and `/parts/` can be overridden by placing files at the same relative path in the child theme
 4. CSS custom properties generated by `theme.json` are stable and follow the `--wp--preset--*` naming convention (WordPress managed)
 
-### 24.2 Breaking Change Policy
+### 25.2 Breaking Change Policy
 
 Hooks, filters, and CSS custom property names are considered part of the public API. Changes to these in a minor version are considered breaking changes and require a major version bump.
 
 Removal of a hook, filter, or class requires a minimum 1 full major version deprecation period with a documented alternative.
 
-### 24.3 Child Theme Template Override Rules
+### 25.3 Child Theme Template Override Rules
 
 - A child theme file at `child-theme/templates/single-product.html` fully replaces `torongo/templates/single-product.html`
 - There is no partial template inheritance for `.html` template files (WordPress FSE limitation)
@@ -1611,9 +1969,9 @@ Removal of a hook, filter, or class requires a minimum 1 full major version depr
 
 ---
 
-## 25. Development Roadmap
+## 26. Development Roadmap
 
-### 25.1 Phase 1 — Foundation (v1.0)
+### 26.1 Phase 1 — Foundation (v1.0)
 
 **Goal:** A complete, production-ready theme skeleton with full architecture implemented.
 
@@ -1630,7 +1988,7 @@ Removal of a hook, filter, or class requires a minimum 1 full major version depr
 | Accessibility | Skip links, focus management, ARIA |
 | SEO | Schema.org structured data |
 
-### 25.2 Phase 2 — eCommerce (v1.1)
+### 26.2 Phase 2 — eCommerce (v1.1)
 
 | Deliverable | Description |
 |---|---|
@@ -1639,11 +1997,11 @@ Removal of a hook, filter, or class requires a minimum 1 full major version depr
 | Product card complete | All states: hover, sale, out-of-stock, new |
 | Cart and checkout styling | Complete WooCommerce Cart/Checkout block styling |
 | My Account pages | PHP template overrides for account pages |
-| Quick view integration | `torongo/product-card-enhanced` block + `a11y-dialog` modal (see §12.5) |
+| Quick view integration | `torongo/product-card-enhanced` block + `a11y-dialog` modal (see §13.5) |
 | Trust badges block | `torongo/trust-badges` custom block |
 | WooCommerce email templates | Branded email header/footer |
 
-### 25.3 Phase 3 — Homepage and Patterns (v1.2)
+### 26.3 Phase 3 — Homepage and Patterns (v1.2)
 
 | Deliverable | Description |
 |---|---|
@@ -1656,7 +2014,7 @@ Removal of a hook, filter, or class requires a minimum 1 full major version depr
 | Homepage template | Complete `front-page.html` assembly |
 | Landing page template | `page-no-title.html` |
 
-### 25.4 Phase 4 — Custom Blocks and Enhancement (v1.3)
+### 26.4 Phase 4 — Custom Blocks and Enhancement (v1.3)
 
 | Deliverable | Description |
 |---|---|
@@ -1669,7 +2027,7 @@ Removal of a hook, filter, or class requires a minimum 1 full major version depr
 | Quick view modal | a11y-dialog based product quick view |
 | Infinite scroll | Optional for shop/archive pages |
 
-### 25.5 Phase 5 — Polish and Production (v1.4)
+### 26.5 Phase 5 — Polish and Production (v1.4)
 
 | Deliverable | Description |
 |---|---|
@@ -1686,33 +2044,33 @@ Removal of a hook, filter, or class requires a minimum 1 full major version depr
 
 ---
 
-## 26. Architecture Review Findings
+## 27. Architecture Review Findings
 
 This section documents the findings of the pre-specification review conducted after initial architecture design.
 
-### 26.1 Missing Architecture Decisions (Resolved)
+### 27.1 Missing Architecture Decisions (Resolved)
 
 **Finding:** How are WooCommerce hooks injected into FSE HTML template parts?  
-**Resolution:** Documented in Section 19.4. Uses `render_block` filter to inject PHP hook output adjacent to named blocks. This is the established pattern for FSE + PHP hook compatibility.
+**Resolution:** Documented in Section 20.4. Uses `render_block` filter to inject PHP hook output adjacent to named blocks. This is the established pattern for FSE + PHP hook compatibility.
 
 **Finding:** What happens if WooCommerce 10.7.0 does not support full block checkout for all gateways?  
-**Resolution:** Documented in Section 12.7 as a known risk. The architecture includes a fallback path to PHP template overrides (`/woocommerce/`) for any surface not covered by WooCommerce blocks. The theme does not assume 100% block coverage for all WooCommerce surfaces.
+**Resolution:** Documented in Section 13.7 as a known risk. The architecture includes a fallback path to PHP template overrides (`/woocommerce/`) for any surface not covered by WooCommerce blocks. The theme does not assume 100% block coverage for all WooCommerce surfaces.
 
 **Finding:** Font loading strategy undefined.  
-**Resolution:** Documented in Sections 7.2 and 17.5. Self-hosted WOFF2 only, registered via `theme.json` `fontFace` declarations, with preload links added via `wp_head`.
+**Resolution:** Documented in Sections 7.2 and 18.5. Self-hosted WOFF2 only, registered via `theme.json` `fontFace` declarations, with preload links added via `wp_head`.
 
 **Finding:** How does the theme handle WooCommerce HPOS (High Performance Order Storage)?  
-**Resolution:** Documented in Section 12 implicitly — the theme uses zero direct order table queries. All order data access is via WooCommerce's order APIs (`wc_get_order()`, etc.), which are HPOS-compatible. No direct `wp_posts` or `postmeta` queries for orders.
+**Resolution:** Documented in Section 13 implicitly — the theme uses zero direct order table queries. All order data access is via WooCommerce's order APIs (`wc_get_order()`, etc.), which are HPOS-compatible. No direct `wp_posts` or `postmeta` queries for orders.
 
-### 26.2 WooCommerce Compatibility Review
+### 27.2 WooCommerce Compatibility Review
 
 **Result:** Satisfactory with two noted risks:
 
 1. **WooCommerce 10.7.0 is a future version** as of this specification's creation. Architecture assumes this version has feature-complete block templates for all storefront surfaces. If launched with an earlier WooCommerce version, the PHP template override path in `/woocommerce/` serves as fallback. The `Torongo\WooCommerce\Manager::check_version()` method should validate minimum version on `admin_notices`.
 
-2. **WooCommerce Blocks extensibility API:** The checkout block customization in Section 12.7 depends on WooCommerce's slot-fill extensibility system. This API must be validated against WooCommerce 10.7.0's actual API surface during Phase 2 development.
+2. **WooCommerce Blocks extensibility API:** The checkout block customization in Section 13.7 depends on WooCommerce's slot-fill extensibility system. This API must be validated against WooCommerce 10.7.0's actual API surface during Phase 2 development.
 
-### 26.3 Scalability Review
+### 27.3 Scalability Review
 
 **Result:** Good. Key scalability points confirmed:
 
@@ -1720,42 +2078,42 @@ This section documents the findings of the pre-specification review conducted af
 - Block pattern registration via `PatternManager` — adding patterns requires only a new `.php` file in `/patterns/`
 - No centralized CSS file that grows unboundedly — SCSS is split per-concern
 - `theme.json` design tokens allow global design changes without hunting through SCSS files
-- Child theme architecture (Section 24) provides a clean extension path without forking
+- Child theme architecture (Section 25) provides a clean extension path without forking
 
 **Risk flagged:** If WooCommerce requires more than ~20 PHP hook integrations, the single `Torongo\WooCommerce\Manager` class should be split further (e.g., `ProductManager`, `CartManager`, `OrderManager`). This split is defined in the folder structure (`inc/classes/WooCommerce/`) and should be implemented if the class exceeds 300 lines.
 
-### 26.4 Maintainability Review
+### 27.4 Maintainability Review
 
 **Result:** Strong. Key maintainability decisions confirmed:
 
 - `theme.json` as single source of truth eliminates "where is this color defined?" questions
 - BEM CSS naming makes component boundaries clear
 - One class per file, one concern per class, clear namespace hierarchy
-- Hooks/filters documented in Section 19 serve as an API contract — team members know exactly what's hookable
+- Hooks/filters documented in Section 20 serve as an API contract — team members know exactly what's hookable
 - Coding standards enforced by automated tools (PHPCS, ESLint, Stylelint) — not dependent on code review discipline
 
 **Concern:** Template parts are HTML files; changes to them require Site Editor access, not file editing. Developers may be unfamiliar with the flow of "edit template part HTML → commit to git → deploy → Site Editor shows update." This must be covered in developer onboarding documentation (outside scope of this specification).
 
-### 26.5 Performance Concerns Review
+### 27.5 Performance Concerns Review
 
 **Result:** Architecture is performance-positive. Concerns and mitigations:
 
 | Concern | Mitigation |
 |---|---|
-| WooCommerce adds many scripts globally | Section 17.6 — conditional enqueuing |
-| Large hero images cause poor LCP | Section 17.4 — preload link + `fetchpriority="high"` |
+| WooCommerce adds many scripts globally | Section 18.6 — conditional enqueuing |
+| Large hero images cause poor LCP | Section 18.4 — preload link + `fetchpriority="high"` |
 | Swiper library is ~30KB | Loaded conditionally via block registration |
-| WooCommerce cart fragments AJAX on every page | Section 17.6 — `woocommerce_cart_fragment_requests` filter |
+| WooCommerce cart fragments AJAX on every page | Section 18.6 — `woocommerce_cart_fragment_requests` filter |
 | Many block patterns = large DOM on homepage | Progressive enhancement: patterns below fold use `loading="lazy"` on images; JS modules use IntersectionObserver |
-| Google Fonts (if used) = render blocking | Prohibited by design — self-hosted fonts only (Section 17.5) |
+| Google Fonts (if used) = render blocking | Prohibited by design — self-hosted fonts only (Section 18.5) |
 
 ---
 
-## 27. Assumptions and Open Decisions
+## 28. Assumptions and Open Decisions
 
 This section documents decisions that were made under uncertainty. If any assumption proves incorrect during implementation, this section must be updated and affected architecture sections revised.
 
-### 27.1 Technology Assumptions
+### 28.1 Technology Assumptions
 
 | # | Assumption | Impact if Wrong | Confidence |
 |---|---|---|---|
@@ -1765,7 +2123,7 @@ This section documents decisions that were made under uncertainty. If any assump
 | A4 | WordPress 7.x Block Bindings API is stable and allows PHP-sourced content in template parts | Medium — alternative `render_block` filter approach is documented | Medium |
 | A5 | `@wordpress/interactivity` API is stable in WordPress 7.x | Low — affects view.js for custom blocks; alternative vanilla JS approach exists | High |
 
-### 27.2 Open Decisions
+### 28.2 Open Decisions
 
 | # | Decision Needed | Options | Current Stance |
 |---|---|---|---|
@@ -1773,35 +2131,36 @@ This section documents decisions that were made under uncertainty. If any assump
 | D2 | Recently Viewed Products | (a) WooCommerce native block, (b) custom JS + localStorage | Defer to Phase 2 — prefer WooCommerce native if available |
 | D3 | Product Comparison | (a) Plugin-based, (b) custom block | Out of scope for v1.0; plugin-compatible by design |
 | D4 | Advanced product filtering (AJAX) | (a) WooCommerce Blocks filters, (b) custom AJAX filter | Default to WooCommerce Blocks filters; custom only if blocks insufficient |
-| D5 | Carousel/slider library | Swiper selected (Section 21.2) | Confirmed — Swiper 11.x |
+| D5 | Carousel/slider library | Swiper selected (Section 22.2) | Confirmed — Swiper 11.x |
 | D6 | Inline SVG vs `<img>` for icons | (a) Inline SVG via PHP helper, (b) `<img>` with SVG src, (c) CSS mask-image | **Undecided** — Inline SVG is accessible but increases DOM size. Decision deferred to Phase 1 implementation |
 | D7 | Product quickview implementation | Modal-based using `a11y-dialog` | Confirmed |
 
-### 27.3 Design System Assumptions
+### 28.3 Design System Assumptions
 
 | # | Assumption |
 |---|---|
-| DS1 | The primary font family is undecided — a placeholder font stack is used in `theme.json`. Font selection is a brand decision outside this specification's scope. |
-| DS2 | Specific hex values for the color palette are undecided — semantic names and roles are defined (Section 7.1) but actual brand colors are a brand decision. |
-| DS3 | The WooCommerce "accent" color (sale badges, etc.) defaults to `accent` token from the palette, which defaults to a warm red. This should be confirmed with brand guidelines. |
+| DS1 | ~~Font family undecided~~ — **Resolved in v1.2.** Font family confirmed as **Inter** (heading and body), system monospace stack for `mono`. Self-hosted WOFF2. See §8.3. |
+| DS2 | ~~Color palette hex values undecided~~ — **Resolved in v1.2.** Full brand and neutral palette defined in §8.2. Primary: `#2D7CC4`, Secondary: `#0F2942`, Accent: `#F4A940`. |
+| DS3 | The WooCommerce "accent" color (sale badges, etc.) uses the `accent` token — confirmed as `#F4A940` (golden amber) per §8.2.1. See §8.2.5 for badge color tokens. |
 
 ---
 
-## 28. Change Log
+## 29. Change Log
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
-| 1.1 | 2026-05-24 | Consistency Review | C1: Fixed §25.2 Quick View block (countdown-timer → product-card-enhanced). C2: Fixed §17.2 critical CSS mechanism (wp_add_inline_style → wp_head priority 1). S1: Fixed §4 template parts structure (nested → flat, matches §5 canonical). S2: Fixed §22.4 PHP naming (removed conflicting class- prefix row, all classes use PSR-4 ClassName.php). S3: Fixed §13.1 breakpoints (theme.json has no breakpoints key → wp_localize_script via PHP constants). S4: Fixed §21.2 WordPress packages (moved @wordpress/* to devDependencies, added externals rule). M1: Aligned pattern counts across §4/§5/§25.3 (added testimonials-carousel, cta-urgency, content-team-grid, woo-rating to §5; fixed §25.3 counts). M2: Fixed §3.4 CSS entry point list (added editor). M3: Added admin.scss entry point to §5. |
+| 1.2 | 2026-05-24 | Design Token Integration | Added §8 Design Tokens — Global Design System: complete concrete token values for color, typography, spacing, layout, borders, shadows, animation, buttons, product cards, header, footer. Resolved DS1 (font family = Inter) and DS2 (brand color palette) from §28.3. Updated DS3 to confirmed accent value. §7.2 relaxed line-height reconciled to 1.8. Border-radius scale extended with explicit 12px Large value for product cards. All downstream sections renumbered §8–§28 → §9–§29. All internal cross-references updated. |
+| 1.1 | 2026-05-24 | Consistency Review | C1: Fixed §26.2 Quick View block (countdown-timer → product-card-enhanced). C2: Fixed §18.2 critical CSS mechanism (wp_add_inline_style → wp_head priority 1). S1: Fixed §4 template parts structure (nested → flat, matches §5 canonical). S2: Fixed §23.4 PHP naming (removed conflicting class- prefix row, all classes use PSR-4 ClassName.php). S3: Fixed §14.1 breakpoints (theme.json has no breakpoints key → wp_localize_script via PHP constants). S4: Fixed §22.2 WordPress packages (moved @wordpress/* to devDependencies, added externals rule). M1: Aligned pattern counts across §4/§5/§26.3 (added testimonials-carousel, cta-urgency, content-team-grid, woo-rating to §5; fixed §26.3 counts). M2: Fixed §3.4 CSS entry point list (added editor). M3: Added admin.scss entry point to §5. |
 | 1.0 | 2025-05-24 | Architecture Design Phase | Initial specification — complete architecture for Torongo v1.0 development |
 
 ---
 
-*End of Torongo Master Specification v1.1*
+*End of Torongo Master Specification v1.2*
 
 ---
 
 > **How to use this document:**  
 > - Before writing any code for this theme, re-read the relevant section of this document.  
-> - When a decision is not covered here, make an explicit decision and add it to Section 27 or the relevant section.  
+> - When a decision is not covered here, make an explicit decision and add it to Section 28 or the relevant section.  
 > - When a decision changes, update this document and increment the version.  
 > - This document is version-controlled in the project's git repository alongside the code.
