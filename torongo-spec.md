@@ -1,6 +1,6 @@
 ﻿# Torongo — Master Theme Specification
 
-**Version:** 1.2  
+**Version:** 1.3  
 **Date:** 2026-05-24  
 **Author:** Architecture Design Phase  
 **Status:** Approved — Source of Truth  
@@ -1909,6 +1909,7 @@ All custom blocks use the `torongo/` namespace:
 - **Type hints:** All method parameters and return types must be type-hinted
 - **Nullable types:** Use `?Type` for nullable parameters; avoid union types unless necessary for clarity
 - **Docblocks:** Required for all public methods; optional for private/protected methods if the type hints are self-documenting
+- **PHP syntax check:** Run `php -l` syntax validation only on **newly created or modified files**. Do not recheck unchanged files. Scope the check to the diff — integrate into pre-commit hooks or CI pipeline using `git diff --name-only` to identify changed `.php` files, then run `php -l` against that list only.
 
 ### 24.2 JavaScript Standards
 
@@ -2111,7 +2112,7 @@ This section documents the findings of the pre-specification review conducted af
 
 ## 28. Assumptions and Open Decisions
 
-This section documents decisions that were made under uncertainty. If any assumption proves incorrect during implementation, this section must be updated and affected architecture sections revised.
+This section documents decisions that were made under uncertainty. If any assumption proves incorrect during implementation, this section must be updated and affected architecture sections revised. See **§28.4** for the workflow policy governing how unresolved assumptions are handled during active development.
 
 ### 28.1 Technology Assumptions
 
@@ -2143,19 +2144,34 @@ This section documents decisions that were made under uncertainty. If any assump
 | DS2 | ~~Color palette hex values undecided~~ — **Resolved in v1.2.** Full brand and neutral palette defined in §8.2. Primary: `#2D7CC4`, Secondary: `#0F2942`, Accent: `#F4A940`. |
 | DS3 | The WooCommerce "accent" color (sale badges, etc.) uses the `accent` token — confirmed as `#F4A940` (golden amber) per §8.2.1. See §8.2.5 for badge color tokens. |
 
+### 28.4 Development Policy for Unresolved Decisions
+
+When a design or architectural decision cannot be resolved immediately, the following policy applies:
+
+1. **Document, do not block.** Add the open item to §28.1 (technology assumptions), §28.2 (open decisions), or §28.3 (design system assumptions) as appropriate and continue architectural development. An unresolved item must never halt implementation progress on unrelated sections.
+
+2. **Use placeholder tokens.** Where a visual value is pending (color, typography, spacing, radius, etc.), use the nearest applicable token already defined in §8 as a provisional value. Mark every placeholder usage with an inline comment: `/* PLACEHOLDER: pending [decision ID] approval */`.
+
+3. **Consistent slug contracts.** Placeholder tokens use the same slug naming convention as finalized tokens. When the decision is approved, only the token value changes inside `theme.json` — no structural CSS or template refactoring is required.
+
+4. **No placeholders in production.** No file containing a `/* PLACEHOLDER */` marker may be included in a tagged release. All markers must be resolved, the comment removed, and the token value confirmed before any version is released.
+
+5. **Resolution flow.** When a pending item is resolved: update the relevant §28 row to show the confirmed decision, update the affected spec section, remove all `/* PLACEHOLDER */` markers in source files, increment the spec version, and add a changelog entry.
+
 ---
 
 ## 29. Change Log
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.3 | 2026-05-24 | Development Workflow | R1: Added PHP syntax-check rule to §24.1 — `php -l` runs only on newly created or modified files, scoped to git diff. R2: Added §28.4 Development Policy for Unresolved Decisions — document-not-block rule, placeholder token protocol, production gate, and resolution flow. Updated §28 intro to reference §28.4. |
 | 1.2 | 2026-05-24 | Design Token Integration | Added §8 Design Tokens — Global Design System: complete concrete token values for color, typography, spacing, layout, borders, shadows, animation, buttons, product cards, header, footer. Resolved DS1 (font family = Inter) and DS2 (brand color palette) from §28.3. Updated DS3 to confirmed accent value. §7.2 relaxed line-height reconciled to 1.8. Border-radius scale extended with explicit 12px Large value for product cards. All downstream sections renumbered §8–§28 → §9–§29. All internal cross-references updated. |
 | 1.1 | 2026-05-24 | Consistency Review | C1: Fixed §26.2 Quick View block (countdown-timer → product-card-enhanced). C2: Fixed §18.2 critical CSS mechanism (wp_add_inline_style → wp_head priority 1). S1: Fixed §4 template parts structure (nested → flat, matches §5 canonical). S2: Fixed §23.4 PHP naming (removed conflicting class- prefix row, all classes use PSR-4 ClassName.php). S3: Fixed §14.1 breakpoints (theme.json has no breakpoints key → wp_localize_script via PHP constants). S4: Fixed §22.2 WordPress packages (moved @wordpress/* to devDependencies, added externals rule). M1: Aligned pattern counts across §4/§5/§26.3 (added testimonials-carousel, cta-urgency, content-team-grid, woo-rating to §5; fixed §26.3 counts). M2: Fixed §3.4 CSS entry point list (added editor). M3: Added admin.scss entry point to §5. |
 | 1.0 | 2025-05-24 | Architecture Design Phase | Initial specification — complete architecture for Torongo v1.0 development |
 
 ---
 
-*End of Torongo Master Specification v1.2*
+*End of Torongo Master Specification v1.3*
 
 ---
 
