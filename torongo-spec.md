@@ -1,7 +1,7 @@
 # Torongo — Master Theme Specification
 
-**Version:** 1.0  
-**Date:** 2025-05-24  
+**Version:** 1.1  
+**Date:** 2026-05-24  
 **Author:** Architecture Design Phase  
 **Status:** Approved — Source of Truth  
 
@@ -185,7 +185,7 @@ CSS follows a **design-token-first** approach:
 
 1. `theme.json` generates CSS Custom Properties automatically via WordPress
 2. SCSS consumes those custom properties
-3. SCSS is compiled per-entry-point (global, block-specific, WooCommerce)
+3. SCSS is compiled per-entry-point (global, editor, WooCommerce, and per-block custom blocks)
 4. WordPress Block Editor loads per-block CSS only on pages that use that block
 
 ### 3.5 WooCommerce Integration Strategy
@@ -215,19 +215,16 @@ Torongo Theme
 │   ├── taxonomy-product_tag.html
 │   └── page-no-title.html      (landing pages)
 │
-├── Template Parts (structural sections)
-│   ├── header/
-│   │   ├── header.html          (default)
-│   │   ├── header-minimal.html  (transparent/landing)
-│   │   └── header-sticky.html   (sticky behavior)
-│   ├── footer/
-│   │   ├── footer.html          (default multi-column)
-│   │   ├── footer-minimal.html  (single-row)
-│   │   └── footer-shop.html     (with newsletter)
-│   └── content/
-│       ├── breadcrumbs.html
-│       ├── post-meta.html
-│       └── pagination.html
+├── Template Parts (structural sections, flat — see §5 canonical rule)
+│   ├── header.html              (default)
+│   ├── header-minimal.html      (transparent/landing)
+│   ├── header-sticky.html       (sticky behavior)
+│   ├── footer.html              (default multi-column)
+│   ├── footer-minimal.html      (single-row)
+│   ├── footer-shop.html         (with newsletter)
+│   ├── breadcrumbs.html
+│   ├── post-meta.html
+│   └── pagination.html
 │
 ├── Block Patterns (reusable content sections)
 │   ├── Hero patterns (hero-full, hero-split, hero-minimal)
@@ -337,11 +334,15 @@ torongo/
 │   ├── categories-banner.php
 │   ├── testimonials-single.php
 │   ├── testimonials-grid.php
+│   ├── testimonials-carousel.php
 │   ├── cta-newsletter.php
 │   ├── cta-promotional.php
+│   ├── cta-urgency.php
 │   ├── content-about.php
 │   ├── content-blog-grid.php
+│   ├── content-team-grid.php
 │   ├── woo-product-card.php
+│   ├── woo-rating.php
 │   └── woo-sale-banner.php
 │
 ├── src/                            # Source files (not deployed directly)
@@ -370,6 +371,7 @@ torongo/
 │   │   ├── utilities/
 │   │   │   ├── _mixins.scss
 │   │   │   └── _functions.scss
+│   │   ├── admin.scss              # Admin-area styles entry (compiles → assets/css/admin.css)
 │   │   ├── editor.scss             # Block editor styles entry
 │   │   ├── global.scss             # Frontend global styles entry
 │   │   └── woocommerce.scss        # WooCommerce styles entry
@@ -962,7 +964,7 @@ All other email templates use WooCommerce defaults. Email styling uses inline CS
 
 ### 13.1 Breakpoint System
 
-Breakpoints are defined once in `src/scss/utilities/_mixins.scss` as SCSS variables and mixins, and referenced in `theme.json` for JS access.
+Breakpoints are defined once in `src/scss/utilities/_mixins.scss` as SCSS variables and mixins. The same values are exposed to JavaScript via `wp_localize_script()` in `Torongo\Core\Assets`, which injects them as `window.torongoData.breakpoints`. PHP constants declared at the top of `inc/helpers/template-helpers.php` (e.g. `TORONGO_BP_TABLET = 768`) serve as the single authoritative source, consumed by both the Assets class (for JS serialization) and documented in SCSS comments for alignment. `theme.json` does not have a breakpoints key and cannot expose breakpoints to JavaScript.
 
 | Name | Min Width | Max Width | Device Target |
 |---|---|---|---|
@@ -1172,7 +1174,7 @@ No custom post meta is stored by Torongo v1.0. Any product-level customization u
 ### 17.2 CSS Performance
 
 - **Block-level CSS splitting:** Each custom block has its own CSS file, loaded only when the block is present on the page (WordPress handles this natively for blocks registered with `style` handles)
-- **Critical CSS:** Above-the-fold styles for the header, hero, and product grid are included inline in `<head>` via `wp_add_inline_style` on `wp_enqueue_scripts`. Generated during build step.
+- **Critical CSS:** Above-the-fold styles for the header, hero, and product grid are output directly to `<head>` via `add_action( 'wp_head', [ $this, 'output_critical_css' ], 1 )` in `Torongo\Core\Assets`. Using `wp_head` at priority 1 ensures the `<style>` tag fires before any enqueued stylesheets, achieving true render-critical inlining. The CSS string is generated as a separate file during the build step and read from disk at runtime. `wp_add_inline_style()` is **not** used for this purpose — it appends styles after an existing enqueued handle and cannot guarantee head placement.
 - **CSS Custom Properties:** Eliminates duplicate value declarations — one property, referenced everywhere
 - **No CSS framework:** No unused CSS from Bootstrap/Tailwind bloat
 
@@ -1422,20 +1424,29 @@ The `composer.json` file exists and defines PSR-4 autoloading for the `Torongo\`
 
 ### 21.2 JavaScript Dependencies (npm)
 
+**`dependencies` (bundled into theme JS):**
+
 | Package | Version | Purpose |
 |---|---|---|
-| `@wordpress/scripts` | ^30.x | Build toolchain (Webpack, Babel, ESLint) |
-| `@wordpress/blocks` | ^13.x | Block registration API |
-| `@wordpress/element` | ^6.x | React for block edit components |
-| `@wordpress/i18n` | ^5.x | JS translations |
-| `@wordpress/dom-ready` | ^4.x | DOM initialization utility |
-| `@wordpress/interactivity` | ^6.x | Block interactivity API (view.js) |
 | `swiper` | ^11.x | Touch slider/carousel (product galleries, carousels) |
 | `a11y-dialog` | ^8.x | Accessible modal dialogs (quick view) |
 | `focus-trap` | ^7.x | Focus trap for modals/mobile menu |
-| `postcss` | ^8.x | CSS processing |
+
+**`devDependencies` (build tools and type checking only — never bundled):**
+
+| Package | Version | Purpose |
+|---|---|---|
+| `@wordpress/scripts` | ^30.x | Build toolchain (Webpack, Babel, ESLint, Stylelint) |
+| `@wordpress/blocks` | ^13.x | Type checking only — runtime is WordPress global `wp.blocks` |
+| `@wordpress/element` | ^6.x | Type checking only — runtime is WordPress global `wp.element` |
+| `@wordpress/i18n` | ^5.x | Type checking only — runtime is WordPress global `wp.i18n` |
+| `@wordpress/dom-ready` | ^4.x | Type checking only — runtime is WordPress global `wp.domReady` |
+| `@wordpress/interactivity` | ^6.x | Type checking only — runtime is WordPress global `wp.interactivity` |
+| `postcss` | ^8.x | CSS processing pipeline |
 | `rtlcss` | ^4.x | RTL CSS generation |
 | `stylelint` | ^16.x | CSS linting |
+
+**Rule:** All `@wordpress/*` packages except `@wordpress/scripts` must appear in `devDependencies` only and must be explicitly listed as `externals` in `webpack.config.js`. They are provided as globals by WordPress at runtime (`wp.blocks`, `wp.element`, etc.) and must never be bundled into theme output. Bundling them causes version conflicts with the copy WordPress ships and doubles the JS payload.
 
 **Note on Swiper:** Swiper is used for product image galleries and carousels. It is loaded only on pages that include the relevant blocks (conditional enqueuing via `wp_enqueue_script` called conditionally).
 
@@ -1506,9 +1517,8 @@ CSS classes use **BEM (Block__Element--Modifier)** methodology.
 
 | Type | Convention | Example |
 |---|---|---|
-| PHP class file | `class-{context}.php` (in `inc/`) | `class-assets.php` |
-| PHP namespace file | `{ClassName}.php` (in Composer structure) | `Manager.php` |
-| PHP helper file | `{context}-helpers.php` | `woocommerce-helpers.php` |
+| PHP class file (PSR-4, all classes) | `{ClassName}.php` under `inc/classes/` | `Manager.php`, `Assets.php` |
+| PHP helper file (non-namespaced) | `{context}-helpers.php` under `inc/helpers/` | `woocommerce-helpers.php` |
 | SCSS partial | `_{name}.scss` | `_product-card.scss` |
 | JS module | `{name}.js` | `sticky-header.js` |
 | Block template | `{template-name}.html` | `single-product.html` |
@@ -1629,7 +1639,7 @@ Removal of a hook, filter, or class requires a minimum 1 full major version depr
 | Product card complete | All states: hover, sale, out-of-stock, new |
 | Cart and checkout styling | Complete WooCommerce Cart/Checkout block styling |
 | My Account pages | PHP template overrides for account pages |
-| Quick view | `torongo/countdown-timer` custom block |
+| Quick view integration | `torongo/product-card-enhanced` block + `a11y-dialog` modal (see §12.5) |
 | Trust badges block | `torongo/trust-badges` custom block |
 | WooCommerce email templates | Branded email header/footer |
 
@@ -1640,8 +1650,8 @@ Removal of a hook, filter, or class requires a minimum 1 full major version depr
 | All hero patterns | 3 hero variations |
 | All product patterns | 4 product section variations |
 | Category patterns | 2 category showcase variations |
-| Testimonial patterns | 2 testimonial variations |
-| CTA patterns | Newsletter + promotional banner |
+| Testimonial patterns | 3 testimonial variations (single, grid, carousel) |
+| CTA patterns | Newsletter + promotional banner + urgency countdown |
 | Content patterns | About, blog grid, team grid |
 | Homepage template | Complete `front-page.html` assembly |
 | Landing page template | `page-no-title.html` |
@@ -1781,11 +1791,12 @@ This section documents decisions that were made under uncertainty. If any assump
 
 | Version | Date | Author | Summary |
 |---|---|---|---|
+| 1.1 | 2026-05-24 | Consistency Review | C1: Fixed §25.2 Quick View block (countdown-timer → product-card-enhanced). C2: Fixed §17.2 critical CSS mechanism (wp_add_inline_style → wp_head priority 1). S1: Fixed §4 template parts structure (nested → flat, matches §5 canonical). S2: Fixed §22.4 PHP naming (removed conflicting class- prefix row, all classes use PSR-4 ClassName.php). S3: Fixed §13.1 breakpoints (theme.json has no breakpoints key → wp_localize_script via PHP constants). S4: Fixed §21.2 WordPress packages (moved @wordpress/* to devDependencies, added externals rule). M1: Aligned pattern counts across §4/§5/§25.3 (added testimonials-carousel, cta-urgency, content-team-grid, woo-rating to §5; fixed §25.3 counts). M2: Fixed §3.4 CSS entry point list (added editor). M3: Added admin.scss entry point to §5. |
 | 1.0 | 2025-05-24 | Architecture Design Phase | Initial specification — complete architecture for Torongo v1.0 development |
 
 ---
 
-*End of Torongo Master Specification v1.0*
+*End of Torongo Master Specification v1.1*
 
 ---
 
